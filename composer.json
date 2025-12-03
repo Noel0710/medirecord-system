@@ -1,0 +1,15 @@
+{
+  "name": "medirecord/medirecord",
+  "description": "Sistema de recordatorios de medicamentos",
+  "type": "project",
+  "require": {
+    "php": ">=8.0",
+    "ext-curl": "*",
+    "ext-mbstring": "*",
+    "ext-json": "*"
+  },
+  "require-dev": {
+    "ext-pdo": "*",
+    "ext-pdo_mysql": "*"
+  }
+}
