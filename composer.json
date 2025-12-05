@@ -3,13 +3,14 @@
   "description": "Sistema de recordatorios de medicamentos",
   "type": "project",
   "require": {
-    "php": ">=8.0",
+    "php": ">=8.2",
     "ext-curl": "*",
     "ext-mbstring": "*",
-    "ext-json": "*"
-  },
-  "require-dev": {
+    "ext-json": "*",
     "ext-pdo": "*",
     "ext-pdo_mysql": "*"
+  },
+  "require-dev": {
+    "ext-gd": "*"
   }
 }
