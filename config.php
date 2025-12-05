@@ -4,10 +4,10 @@
 // Verificar si estamos en Railway (variables de entorno)
 if (getenv('RAILWAY_ENVIRONMENT') || getenv('MYSQLHOST')) {
     // Configuración para Railway
-    $host = getenv('MYSQLHOST');
-    $dbname = getenv('MYSQLDATABASE');
-    $username = getenv('MYSQLUSER');
-    $password = getenv('MYSQLPASSWORD');
+    $host = getenv('mysql.railway.internal');
+    $dbname = getenv('railway');
+    $username = getenv('root');
+    $password = getenv('DkZhXsgBbZTCmTYijkuRAASiPAClFHpE');
     $port = getenv('MYSQLPORT') ?: 3306;
 } else {
     // Configuración local (XAMPP)
@@ -644,5 +644,6 @@ function limpiarDatosAntiguos($dias = 30) {
         return false;
     }
 }
+
 
 ?>
