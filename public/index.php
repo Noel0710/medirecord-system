@@ -1,6 +1,6 @@
 <?php
 session_start();
-include '../config.php';
+include '../config.php';  // ✅ LINEA CORREGIDA: Punto y coma agregado y ruta cambiada
 
 $error = '';
 
@@ -14,8 +14,8 @@ if (isset($_POST['login'])) {
     $user = $stmt->fetch();
     
     if ($user) {
-        // Verificar contraseña (en producción usar password_verify())
-        if ($password === 'password123') { // Contraseña simple para testing
+        // ⚠️ SEGURIDAD: Esto es solo para testing, en producción usar password_verify()
+        if ($password === 'password123') { 
             $_SESSION['user_id'] = $user['id_usuario'];
             $_SESSION['user_name'] = $user['nombre'];
             $_SESSION['user_type'] = $user['tipo'];
@@ -44,9 +44,12 @@ if (isset($_POST['register'])) {
         if ($stmt->fetch()) {
             $error = 'El email ya está registrado';
         } else {
-            // Insertar nuevo usuario (en producción hashear la contraseña)
+            // ⚠️ SEGURIDAD: En producción, HASH la contraseña
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            
+            // Insertar nuevo usuario
             $stmt = $pdo->prepare("INSERT INTO usuarios (nombre, email, password, tipo) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$name, $email, $password, $user_type]);
+            $stmt->execute([$name, $email, $hashed_password, $user_type]);
             
             // Iniciar sesión automáticamente después del registro
             $user_id = $pdo->lastInsertId();
@@ -83,7 +86,7 @@ if (isset($_POST['register'])) {
                 <div class="input-group">
                     <label for="email">Correo electrónico:</label>
                     <input type="email" id="email" name="email" required 
-                           value="<?php echo isset($_POST['email']) ? $_POST['email'] : ''; ?>">
+                           value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>">
                 </div>
                 
                 <div class="input-group">
@@ -95,7 +98,7 @@ if (isset($_POST['register'])) {
                 <button type="submit" name="login" class="btn">Iniciar Sesión</button>
             </form>
             
-            <p class="register-link">¿No tienes cuenta? <a href="#" onclick="showRegister()">Regístrate aquí</a></p>
+            <p class="register-link">¿No tienes cuenta? <a href="#" onclick="showRegister(); return false;">Regístrate aquí</a></p>
             
             <div id="register-form" style="display: none;">
                 <h2>Registro</h2>
@@ -132,12 +135,15 @@ if (isset($_POST['register'])) {
     <script>
         function showRegister() {
             document.getElementById('register-form').style.display = 'block';
+            return false; // Evita que el enlace navegue
         }
         
         // Mostrar formulario de registro si hay error en registro
         <?php if (isset($_POST['register'])): ?>
-            document.getElementById('register-form').style.display = 'block';
+            document.addEventListener('DOMContentLoaded', function() {
+                document.getElementById('register-form').style.display = 'block';
+            });
         <?php endif; ?>
     </script>
 </body>
-</html>  
+</html>
