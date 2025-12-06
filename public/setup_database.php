@@ -1,6 +1,6 @@
 <?php
-// setup_database.php - Versión simplificada para Railway
-
+// setup_database.php - Versión corregida para Railway
+// Este archivo está en /app/public/setup_database.php
 
 echo "<!DOCTYPE html>
 <html lang='es'>
@@ -8,49 +8,149 @@ echo "<!DOCTYPE html>
     <meta charset='UTF-8'>
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
     <title>Configuración de Base de Datos - MediRecord</title>
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css' rel='stylesheet'>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
-        .container { max-width: 1000px; margin: 40px auto; background: white; border-radius: 15px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
-        .header { background: linear-gradient(to right, #4f46e5, #7c3aed); color: white; padding: 30px; text-align: center; }
-        .header h1 { font-size: 2.5rem; margin-bottom: 10px; }
-        .header p { opacity: 0.9; }
-        .content { padding: 40px; }
-        .step { background: #f8fafc; border-radius: 10px; padding: 25px; margin-bottom: 25px; border-left: 5px solid #4f46e5; }
-        .step h3 { color: #4f46e5; margin-bottom: 15px; font-size: 1.3rem; }
-        .success { color: #10b981; background: #d1fae5; padding: 10px 15px; border-radius: 6px; margin: 10px 0; }
-        .error { color: #ef4444; background: #fee2e2; padding: 10px 15px; border-radius: 6px; margin: 10px 0; }
-        .warning { color: #f59e0b; background: #fef3c7; padding: 10px 15px; border-radius: 6px; margin: 10px 0; }
-        .info-box { background: #e0e7ff; border-radius: 8px; padding: 20px; margin: 20px 0; }
-        pre { background: #1e293b; color: #e2e8f0; padding: 15px; border-radius: 8px; overflow-x: auto; margin: 15px 0; font-family: 'Courier New', monospace; }
-        .btn { background: #4f46e5; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: all 0.3s; text-decoration: none; display: inline-block; }
-        .btn:hover { background: #4338ca; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4); }
-        .btn-danger { background: #ef4444; }
-        .btn-danger:hover { background: #dc2626; }
-        .btn-success { background: #10b981; }
-        .btn-success:hover { background: #059669; }
-        .footer { text-align: center; padding: 20px; color: #64748b; font-size: 0.9rem; border-top: 1px solid #e2e8f0; }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border: none;
+        }
+        .card-header {
+            background: linear-gradient(to right, #4f46e5, #7c3aed);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 25px;
+        }
+        .step-card {
+            border-left: 5px solid #4f46e5;
+            margin-bottom: 20px;
+        }
+        .log-output {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        .success-badge {
+            background-color: #10b981;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+        .error-badge {
+            background-color: #ef4444;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+        .warning-badge {
+            background-color: #f59e0b;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
     <div class='container'>
-        <div class='header'>
-            <h1>🚀 MediRecord - Configuración</h1>
-            <p>Sistema de recordatorio de medicamentos para adultos mayores</p>
-        </div>
-        
-        <div class='content'>";
+        <div class='row justify-content-center'>
+            <div class='col-lg-10'>
+                <div class='card'>
+                    <div class='card-header text-center'>
+                        <h1 class='display-5'>🚀 MediRecord - Configuración</h1>
+                        <p class='lead'>Sistema de recordatorio de medicamentos para adultos mayores</p>
+                    </div>
+                    <div class='card-body'>";
 
 // =============================================================================
-// CONFIGURACIÓN DE CONEXIÓN DIRECTA (sin require_once)
+// FUNCIÓN PARA REGISTRAR LOG
 // =============================================================================
+function logMessage($message, $type = 'info') {
+    $badge = '';
+    $color = '';
+    
+    switch($type) {
+        case 'success':
+            $badge = '<span class="success-badge">✓</span>';
+            $color = 'text-success';
+            break;
+        case 'error':
+            $badge = '<span class="error-badge">✗</span>';
+            $color = 'text-danger';
+            break;
+        case 'warning':
+            $badge = '<span class="warning-badge">!</span>';
+            $color = 'text-warning';
+            break;
+        default:
+            $badge = '<span class="badge bg-secondary">i</span>';
+            $color = 'text-info';
+    }
+    
+    $timestamp = date('H:i:s');
+    return "<div class='$color'>[$timestamp] $badge $message</div>";
+}
 
-// Detectar si estamos en Railway
+// =============================================================================
+// PASO 1: DETECCIÓN DEL ENTORNO
+// =============================================================================
+echo "<div class='step-card card'>
+        <div class='card-body'>
+            <h4 class='card-title'>Paso 1: Detección del entorno</h4>
+            <div class='log-output'>";
+
 $isRailway = getenv('MYSQLHOST') !== false || 
              getenv('RAILWAY_ENVIRONMENT') !== false ||
              getenv('RAILWAY_PUBLIC_DOMAIN') !== false;
 
-// Configuración de base de datos
+echo logMessage("Entorno detectado: " . ($isRailway ? 'Railway 🚄' : 'Local 🖥️'), 'info');
+echo logMessage("PHP Version: " . PHP_VERSION, 'info');
+
+// Variables de entorno
+$env_vars = [
+    'MYSQLHOST' => getenv('MYSQLHOST'),
+    'MYSQLPORT' => getenv('MYSQLPORT'),
+    'MYSQLDATABASE' => getenv('MYSQLDATABASE'),
+    'MYSQLUSER' => getenv('MYSQLUSER'),
+    'MYSQLPASSWORD' => getenv('MYSQLPASSWORD') ? '***' . substr(getenv('MYSQLPASSWORD'), -4) : null,
+    'MYSQL_URL' => getenv('MYSQL_URL'),
+    'RAILWAY_PUBLIC_DOMAIN' => getenv('RAILWAY_PUBLIC_DOMAIN')
+];
+
+foreach ($env_vars as $key => $value) {
+    if ($value) {
+        echo logMessage("$key: $value", 'success');
+    } else {
+        echo logMessage("$key: NO DEFINIDO", 'warning');
+    }
+}
+
+echo "</div></div></div>";
+
+// =============================================================================
+// PASO 2: CONFIGURACIÓN DE CONEXIÓN
+// =============================================================================
+echo "<div class='step-card card'>
+        <div class='card-body'>
+            <h4 class='card-title'>Paso 2: Configuración de conexión a MySQL</h4>
+            <div class='log-output'>";
+
+// Configuración
 if ($isRailway) {
     $host = getenv('MYSQLHOST') ?: 'localhost';
     $port = getenv('MYSQLPORT') ?: '3306';
@@ -58,9 +158,9 @@ if ($isRailway) {
     $username = getenv('MYSQLUSER') ?: 'root';
     $password = getenv('MYSQLPASSWORD') ?: '';
     
-    // Si MYSQL_URL está disponible
     $mysql_url = getenv('MYSQL_URL');
     if ($mysql_url) {
+        echo logMessage("Usando MYSQL_URL para configuración", 'info');
         $url = parse_url($mysql_url);
         $host = $url['host'] ?? $host;
         $port = $url['port'] ?? $port;
@@ -69,7 +169,6 @@ if ($isRailway) {
         $password = $url['pass'] ?? $password;
     }
 } else {
-    // Configuración local
     $host = 'localhost';
     $port = '3306';
     $database = 'medirecord_db';
@@ -77,79 +176,67 @@ if ($isRailway) {
     $password = '';
 }
 
-echo "<div class='step'>
-        <h3>Paso 1: Verificación del entorno</h3>
-        <p><strong>Entorno detectado:</strong> " . ($isRailway ? 'Railway 🚄' : 'Local 🖥️') . "</p>
-        <p><strong>Variables de entorno:</strong></p>
-        <pre>";
-echo "MYSQLHOST: " . (getenv('MYSQLHOST') ?: 'NO DEFINIDO') . "\n";
-echo "MYSQLPORT: " . (getenv('MYSQLPORT') ?: 'NO DEFINIDO') . "\n";
-echo "MYSQLDATABASE: " . (getenv('MYSQLDATABASE') ?: 'NO DEFINIDO') . "\n";
-echo "MYSQLUSER: " . (getenv('MYSQLUSER') ?: 'NO DEFINIDO') . "\n";
-echo "MYSQLPASSWORD: " . (getenv('MYSQLPASSWORD') ? '***' . substr(getenv('MYSQLPASSWORD'), -4) : 'NO DEFINIDO') . "\n";
-echo "MYSQL_URL: " . (getenv('MYSQL_URL') ? 'DEFINIDO' : 'NO DEFINIDO') . "\n";
-echo "RAILWAY_PUBLIC_DOMAIN: " . (getenv('RAILWAY_PUBLIC_DOMAIN') ?: 'NO DEFINIDO') . "\n";
-echo "</pre>
-    </div>";
+echo logMessage("Host: $host", 'info');
+echo logMessage("Puerto: $port", 'info');
+echo logMessage("Base de datos: $database", 'info');
+echo logMessage("Usuario: $username", 'info');
 
 // =============================================================================
 // INTENTAR CONEXIÓN
 // =============================================================================
-
 $pdo = null;
 try {
-    echo "<div class='step'>
-            <h3>Paso 2: Conexión a MySQL</h3>";
-    
+    // Primero intentar conexión sin base de datos
     $dsn = "mysql:host=$host;port=$port;charset=utf8mb4";
-    
-    // Intentar conexión sin especificar base de datos primero
     $pdo = new PDO($dsn, $username, $password, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES => false
     ]);
     
-    echo "<div class='success'>✅ Conexión exitosa al servidor MySQL</div>";
+    echo logMessage("✅ Conexión exitosa al servidor MySQL", 'success');
     
     // Verificar si la base de datos existe
     $stmt = $pdo->query("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '$database'");
     $dbExists = $stmt->fetch();
     
     if (!$dbExists) {
-        echo "<div class='warning'>⚠️ La base de datos '$database' no existe. Creando...</div>";
+        echo logMessage("La base de datos '$database' no existe. Creando...", 'warning');
         $pdo->exec("CREATE DATABASE IF NOT EXISTS `$database` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-        echo "<div class='success'>✅ Base de datos '$database' creada exitosamente</div>";
+        echo logMessage("✅ Base de datos '$database' creada", 'success');
     }
     
     // Seleccionar la base de datos
     $pdo->exec("USE `$database`");
-    echo "<div class='success'>✅ Conectado a la base de datos: $database</div>";
-    
-    echo "</div>";
+    echo logMessage("✅ Conectado a la base de datos: $database", 'success');
     
 } catch (PDOException $e) {
-    echo "<div class='error'>❌ Error de conexión: " . htmlspecialchars($e->getMessage()) . "</div>";
-    echo "<div class='info-box'>
-            <h4>Solución de problemas:</h4>
-            <p>1. Verifica que hayas añadido un servicio MySQL en Railway</p>
-            <p>2. Asegúrate de que las variables de entorno estén configuradas</p>
-            <p>3. En Railway, ve a tu proyecto → Variables</p>
-            <p>4. Deben aparecer automáticamente MYSQLHOST, MYSQLUSER, MYSQLPASSWORD, etc.</p>
-            <p>5. Si estás localmente, asegúrate de que XAMPP/MAMP esté corriendo</p>
+    echo logMessage("❌ Error de conexión: " . $e->getMessage(), 'error');
+    echo "<div class='alert alert-danger mt-3'>
+            <h5>Solución de problemas:</h5>
+            <ol>
+                <li>Verifica que hayas añadido un servicio MySQL en Railway</li>
+                <li>En Railway, ve a tu proyecto → Variables → Deben aparecer las variables MySQL automáticamente</li>
+                <li>Si estás localmente, asegúrate de que MySQL esté corriendo (XAMPP/MAMP)</li>
+                <li>Revisa que el usuario y contraseña sean correctos</li>
+            </ol>
+            <a href='test_variables.php' class='btn btn-outline-danger btn-sm'>Probar variables</a>
           </div>";
-    echo "</div></div></div></body></html>";
+    echo "</div></div></div></div></div></body></html>";
     exit;
 }
 
+echo "</div></div></div>";
+
 // =============================================================================
-// VERIFICAR SI YA HAY TABLAS
+// PASO 3: VERIFICAR TABLAS EXISTENTES
 // =============================================================================
+echo "<div class='step-card card'>
+        <div class='card-body'>
+            <h4 class='card-title'>Paso 3: Verificación de tablas existentes</h4>
+            <div class='log-output'>";
 
 $force = isset($_GET['force']) && $_GET['force'] == '1';
-
-echo "<div class='step'>
-        <h3>Paso 3: Verificación de tablas existentes</h3>";
 
 try {
     $stmt = $pdo->query("SHOW TABLES");
@@ -157,40 +244,69 @@ try {
     $tableCount = count($existingTables);
     
     if ($tableCount > 0) {
-        echo "<div class='warning'>⚠️ Ya existen $tableCount tablas en la base de datos:</div>
-              <ul>";
+        echo logMessage("⚠️ Ya existen $tableCount tablas en la base de datos", 'warning');
         foreach ($existingTables as $table) {
-            echo "<li>$table</li>";
+            echo logMessage("- $table", 'info');
         }
-        echo "</ul>";
         
         if (!$force) {
-            echo "<p>¿Qué deseas hacer?</p>
-                  <a href='?force=1' class='btn btn-danger'>Forzar recreación (borrará datos)</a>
-                  <a href='index.php' class='btn'>Ir al inicio</a>
-                  </div></div></div></body></html>";
+            echo "</div>
+                  <div class='mt-3'>
+                    <p class='alert alert-warning'>¿Qué deseas hacer?</p>
+                    <a href='?force=1' class='btn btn-danger'>Forzar recreación (borrará datos existentes)</a>
+                    <a href='index.php' class='btn btn-secondary'>Ir al inicio</a>
+                    <a href='test_variables.php' class='btn btn-info'>Probar conexión</a>
+                  </div>
+                  </div></div></div></div></div></body></html>";
             exit;
         } else {
-            echo "<div class='warning'>⚠️ MODO FORZADO ACTIVADO - Se eliminarán tablas existentes</div>";
+            echo logMessage("⚠️ MODO FORZADO ACTIVADO - Se eliminarán tablas existentes", 'warning');
         }
     } else {
-        echo "<div class='success'>✅ No hay tablas existentes. Creando estructura nueva...</div>";
+        echo logMessage("✅ No hay tablas existentes. Creando estructura nueva...", 'success');
     }
     
 } catch (Exception $e) {
-    echo "<div class='error'>Error verificando tablas: " . $e->getMessage() . "</div>";
+    echo logMessage("Error verificando tablas: " . $e->getMessage(), 'error');
 }
 
-echo "</div>";
+echo "</div></div></div>";
 
 // =============================================================================
-// CREACIÓN DE TABLAS
+// PASO 4: ELIMINAR TABLAS EXISTENTES (si está en modo forzado)
 // =============================================================================
+if ($force && $tableCount > 0) {
+    echo "<div class='step-card card'>
+            <div class='card-body'>
+                <h4 class='card-title'>Paso 4: Eliminando tablas existentes</h4>
+                <div class='log-output'>";
+    
+    // Deshabilitar claves foráneas temporalmente
+    $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
+    
+    foreach ($existingTables as $table) {
+        try {
+            $pdo->exec("DROP TABLE IF EXISTS `$table`");
+            echo logMessage("✅ Tabla '$table' eliminada", 'success');
+        } catch (Exception $e) {
+            echo logMessage("❌ Error eliminando tabla '$table': " . $e->getMessage(), 'error');
+        }
+    }
+    
+    // Rehabilitar claves foráneas
+    $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
+    
+    echo "</div></div></div>";
+}
 
-echo "<div class='step'>
-        <h3>Paso 4: Creando estructura de la base de datos</h3>";
+// =============================================================================
+// PASO 5: CREACIÓN DE TABLAS
+// =============================================================================
+echo "<div class='step-card card'>
+        <div class='card-body'>
+            <h4 class='card-title'>Paso 5: Creando estructura de la base de datos</h4>
+            <div class='log-output'>";
 
-// Array con las sentencias SQL para crear tablas
 $tables = [
     "usuarios" => "CREATE TABLE IF NOT EXISTS usuarios (
         id_usuario int(11) NOT NULL AUTO_INCREMENT,
@@ -265,60 +381,82 @@ $tables = [
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
 ];
 
-// Crear tablas
 $createdTables = 0;
 foreach ($tables as $tableName => $sql) {
     try {
         $pdo->exec($sql);
-        echo "<div class='success'>✅ Tabla '$tableName' creada</div>";
+        echo logMessage("✅ Tabla '$tableName' creada", 'success');
         $createdTables++;
+        
+        // Pequeña pausa para evitar sobrecarga
+        usleep(100000); // 100ms
+        
     } catch (Exception $e) {
-        echo "<div class='error'>❌ Error creando tabla '$tableName': " . $e->getMessage() . "</div>";
+        echo logMessage("❌ Error creando tabla '$tableName': " . $e->getMessage(), 'error');
     }
 }
 
-echo "</div>";
+echo "</div></div></div>";
 
 // =============================================================================
-// CLAVES FORÁNEAS
+// PASO 6: CLAVES FORÁNEAS
 // =============================================================================
+echo "<div class='step-card card'>
+        <div class='card-body'>
+            <h4 class='card-title'>Paso 6: Configurando relaciones entre tablas</h4>
+            <div class='log-output'>";
 
-echo "<div class='step'>
-        <h3>Paso 5: Configurando relaciones entre tablas</h3>";
+// Deshabilitar temporalmente claves foráneas para evitar errores
+$pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
 
 $foreignKeys = [
-    "ALTER TABLE medicamentos ADD CONSTRAINT medicamentos_ibfk_1 FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario) ON DELETE CASCADE",
-    "ALTER TABLE medicamentos ADD CONSTRAINT medicamentos_ibfk_2 FOREIGN KEY (agregado_por) REFERENCES usuarios(id_usuario) ON DELETE SET NULL",
-    "ALTER TABLE horarios ADD CONSTRAINT horarios_ibfk_1 FOREIGN KEY (id_medicamento) REFERENCES medicamentos(id_medicamento) ON DELETE CASCADE",
-    "ALTER TABLE historial_tomas ADD CONSTRAINT historial_tomas_ibfk_1 FOREIGN KEY (id_horario) REFERENCES horarios(id_horario) ON DELETE CASCADE",
-    "ALTER TABLE vinculaciones ADD CONSTRAINT vinculaciones_ibfk_1 FOREIGN KEY (id_paciente) REFERENCES usuarios(id_usuario) ON DELETE CASCADE",
-    "ALTER TABLE vinculaciones ADD CONSTRAINT vinculaciones_ibfk_2 FOREIGN KEY (id_cuidador) REFERENCES usuarios(id_usuario) ON DELETE CASCADE",
-    "ALTER TABLE recordatorios_whatsapp ADD CONSTRAINT recordatorios_whatsapp_ibfk_1 FOREIGN KEY (id_horario) REFERENCES horarios(id_horario) ON DELETE CASCADE",
-    "ALTER TABLE recordatorios_whatsapp ADD CONSTRAINT recordatorios_whatsapp_ibfk_2 FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario) ON DELETE CASCADE"
+    ["medicamentos", "id_usuario", "usuarios", "id_usuario", "CASCADE"],
+    ["medicamentos", "agregado_por", "usuarios", "id_usuario", "SET NULL"],
+    ["horarios", "id_medicamento", "medicamentos", "id_medicamento", "CASCADE"],
+    ["historial_tomas", "id_horario", "horarios", "id_horario", "CASCADE"],
+    ["vinculaciones", "id_paciente", "usuarios", "id_usuario", "CASCADE"],
+    ["vinculaciones", "id_cuidador", "usuarios", "id_usuario", "CASCADE"],
+    ["recordatorios_whatsapp", "id_horario", "horarios", "id_horario", "CASCADE"],
+    ["recordatorios_whatsapp", "id_usuario", "usuarios", "id_usuario", "CASCADE"]
 ];
 
 $addedKeys = 0;
 foreach ($foreignKeys as $fk) {
+    list($table, $column, $refTable, $refColumn, $onDelete) = $fk;
+    
     try {
-        $pdo->exec($fk);
-        echo "<div class='success'>✅ Relación configurada</div>";
+        // Primero eliminar la clave si existe
+        $pdo->exec("ALTER TABLE `$table` DROP FOREIGN KEY IF EXISTS `fk_{$table}_{$column}`");
+        
+        // Crear nueva clave
+        $sql = "ALTER TABLE `$table` 
+                ADD CONSTRAINT `fk_{$table}_{$column}` 
+                FOREIGN KEY (`$column`) 
+                REFERENCES `$refTable` (`$refColumn`) 
+                ON DELETE $onDelete 
+                ON UPDATE CASCADE";
+        
+        $pdo->exec($sql);
+        echo logMessage("✅ Relación $table.$column → $refTable.$refColumn", 'success');
         $addedKeys++;
+        
     } catch (Exception $e) {
-        // Ignorar errores de claves ya existentes
-        if (strpos($e->getMessage(), 'errno: 121') === false) {
-            echo "<div class='warning'>⚠️ " . $e->getMessage() . "</div>";
-        }
+        echo logMessage("⚠️ Relación $table.$column: " . $e->getMessage(), 'warning');
     }
 }
 
-echo "</div>";
+// Rehabilitar claves foráneas
+$pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
+
+echo "</div></div></div>";
 
 // =============================================================================
-// DATOS INICIALES
+// PASO 7: DATOS INICIALES
 // =============================================================================
-
-echo "<div class='step'>
-        <h3>Paso 6: Insertando datos iniciales</h3>";
+echo "<div class='step-card card'>
+        <div class='card-body'>
+            <h4 class='card-title'>Paso 7: Insertando datos iniciales</h4>
+            <div class='log-output'>";
 
 try {
     // Verificar si ya hay usuarios
@@ -326,13 +464,18 @@ try {
     $userCount = $stmt->fetch()['count'];
     
     if ($userCount == 0) {
-        // Insertar usuarios de prueba
+        echo logMessage("Insertando datos de prueba...", 'info');
+        
+        // Usar password_hash para contraseñas reales
+        $password_hash = password_hash('password123', PASSWORD_DEFAULT);
+        
+        // Usuarios
         $users = [
-            ['María González López', 'maria.gonzalez@email.com', '$2y$10$hashedpassword1', 'paciente', '+521234567890'],
-            ['Carlos Rodríguez Pérez', 'carlos.rodriguez@email.com', '$2y$10$hashedpassword2', 'cuidador', '+521234567891'],
-            ['Ana Martínez Sánchez', 'ana.martinez@email.com', '$2y$10$hashedpassword3', 'paciente', '+521234567892'],
-            ['Javier López García', 'javier.lopez@email.com', '$2y$10$hashedpassword4', 'cuidador', '+521234567893'],
-            ['Isabel Díaz Fernández', 'isabel.diaz@email.com', '$2y$10$hashedpassword5', 'paciente', '+521234567894']
+            ['María González López', 'maria.gonzalez@email.com', $password_hash, 'paciente', '+521234567890'],
+            ['Carlos Rodríguez Pérez', 'carlos.rodriguez@email.com', $password_hash, 'cuidador', '+521234567891'],
+            ['Ana Martínez Sánchez', 'ana.martinez@email.com', $password_hash, 'paciente', '+521234567892'],
+            ['Javier López García', 'javier.lopez@email.com', $password_hash, 'cuidador', '+521234567893'],
+            ['Isabel Díaz Fernández', 'isabel.diaz@email.com', $password_hash, 'paciente', '+521234567894']
         ];
         
         foreach ($users as $user) {
@@ -340,11 +483,11 @@ try {
             $stmt->execute($user);
         }
         
-        echo "<div class='success'>✅ 5 usuarios de prueba insertados</div>";
+        echo logMessage("✅ 5 usuarios de prueba insertados", 'success');
         
-        // Insertar vinculaciones
+        // Vincular usuarios
         $vinculaciones = [
-            [1, 2, 1], // María - Carlos
+            [1, 2, 1], // María (paciente) - Carlos (cuidador)
             [3, 4, 1], // Ana - Javier
             [5, 2, 1]  // Isabel - Carlos
         ];
@@ -354,9 +497,9 @@ try {
             $stmt->execute($vin);
         }
         
-        echo "<div class='success'>✅ Vinculaciones creadas</div>";
+        echo logMessage("✅ 3 vinculaciones creadas", 'success');
         
-        // Insertar medicamentos de ejemplo
+        // Medicamentos
         $medicamentos = [
             [1, 'Losartán', '1 tableta de 50mg', 'Tomar con el desayuno', 2],
             [1, 'Metformina', '1 tableta de 850mg', 'Tomar con alimentos', 2],
@@ -369,11 +512,11 @@ try {
             $stmt->execute($med);
             $medId = $pdo->lastInsertId();
             
-            // Crear horarios según el medicamento
-            if ($med[0] == 1 && $med[1] == 'Losartán') {
+            // Crear horarios
+            if ($med[1] == 'Losartán') {
                 $pdo->exec("INSERT INTO horarios (id_medicamento, hora) VALUES ($medId, '08:00:00')");
                 $pdo->exec("INSERT INTO horarios (id_medicamento, hora) VALUES ($medId, '20:00:00')");
-            } elseif ($med[0] == 1 && $med[1] == 'Metformina') {
+            } elseif ($med[1] == 'Metformina') {
                 $pdo->exec("INSERT INTO horarios (id_medicamento, hora) VALUES ($medId, '08:00:00')");
                 $pdo->exec("INSERT INTO horarios (id_medicamento, hora) VALUES ($medId, '14:00:00')");
             } else {
@@ -381,54 +524,110 @@ try {
             }
         }
         
-        echo "<div class='success'>✅ Medicamentos y horarios creados</div>";
+        echo logMessage("✅ 4 medicamentos con horarios creados", 'success');
+        
+        // Insertar algunas tomas de ejemplo
+        $pdo->exec("INSERT INTO historial_tomas (id_horario, estado) VALUES (1, 'tomado')");
+        $pdo->exec("INSERT INTO historial_tomas (id_horario, estado) VALUES (2, 'tomado')");
+        $pdo->exec("INSERT INTO historial_tomas (id_horario, estado) VALUES (3, 'tomado')");
+        
+        echo logMessage("✅ 3 registros de tomas creados", 'success');
         
     } else {
-        echo "<div class='info-box'>Ya existen $userCount usuarios en la base de datos. No se insertaron datos de prueba.</div>";
+        echo logMessage("Ya existen $userCount usuarios. Saltando inserción de datos de prueba.", 'info');
     }
     
 } catch (Exception $e) {
-    echo "<div class='error'>❌ Error insertando datos: " . $e->getMessage() . "</div>";
+    echo logMessage("❌ Error insertando datos: " . $e->getMessage(), 'error');
 }
 
-echo "</div>";
+echo "</div></div></div>";
 
 // =============================================================================
 // RESUMEN FINAL
 // =============================================================================
+echo "<div class='card mt-4'>
+        <div class='card-body text-center'>
+            <h2 class='text-success mb-4'>🎉 ¡Configuración completada!</h2>
+            
+            <div class='row mb-4'>
+                <div class='col-md-4'>
+                    <div class='card bg-light'>
+                        <div class='card-body'>
+                            <h5>Tablas creadas</h5>
+                            <h2 class='text-primary'>$createdTables</h2>
+                            <small>de " . count($tables) . " totales</small>
+                        </div>
+                    </div>
+                </div>
+                <div class='col-md-4'>
+                    <div class='card bg-light'>
+                        <div class='card-body'>
+                            <h5>Relaciones</h5>
+                            <h2 class='text-primary'>$addedKeys</h2>
+                            <small>claves foráneas</small>
+                        </div>
+                    </div>
+                </div>
+                <div class='col-md-4'>
+                    <div class='card bg-light'>
+                        <div class='card-body'>
+                            <h5>Entorno</h5>
+                            <h4>" . ($isRailway ? 'Railway 🚄' : 'Local 🖥️') . "</h4>
+                            <small>" . getenv('RAILWAY_PUBLIC_DOMAIN') ?: 'localhost' . "</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class='alert alert-info'>
+                <h5>📋 Resumen de la base de datos</h5>
+                <p><strong>Base de datos:</strong> $database</p>
+                <p><strong>Host:</strong> $host:$port</p>
+                <p><strong>Usuario:</strong> $username</p>
+            </div>
+            
+            <div class='d-grid gap-2 d-md-flex justify-content-center mt-4'>
+                <a href='index.php' class='btn btn-success btn-lg'>
+                    🚀 Ir al sistema MediRecord
+                </a>
+                <a href='test_variables.php' class='btn btn-outline-primary btn-lg'>
+                    🔧 Probar conexión
+                </a>
+                <a href='?force=1' class='btn btn-outline-warning btn-lg'>
+                    🔄 Reiniciar configuración
+                </a>
+            </div>
+            
+            <div class='alert alert-warning mt-4'>
+                <h5>👥 Credenciales de prueba:</h5>
+                <p><strong>Paciente:</strong> maria.gonzalez@email.com / password123</p>
+                <p><strong>Cuidador:</strong> carlos.rodriguez@email.com / password123</p>
+                <p class='mb-0'><small>Todas las contraseñas son: <code>password123</code></small></p>
+            </div>
+            
+            <div class='text-muted mt-3'>
+                <p>MediRecord v2.0 &copy; " . date('Y') . " - Sistema de recordatorio de medicamentos</p>
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+    </div>
 
-echo "<div class='step'>
-        <h3>🎉 ¡Configuración completada!</h3>
-        <div class='success' style='font-size: 1.2rem; padding: 20px; text-align: center;'>
-            <p><strong>Base de datos configurada exitosamente</strong></p>
-            <p>Tablas creadas: $createdTables de " . count($tables) . "</p>
-            <p>Relaciones configuradas: $addedKeys</p>
-        </div>
+    <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js'></script>
+    <script>
+        // Auto-scroll al final de los logs
+        document.querySelectorAll('.log-output').forEach(function(element) {
+            element.scrollTop = element.scrollHeight;
+        });
         
-        <div style='text-align: center; margin-top: 30px;'>
-            <a href='index.php' class='btn btn-success' style='font-size: 1.2rem; padding: 15px 30px;'>
-                🚀 Ir al sistema MediRecord
-            </a>
-        </div>
-        
-        <div class='info-box' style='margin-top: 30px;'>
-            <h4>Información para Railway:</h4>
-            <p><strong>URL del sistema:</strong> <a href='index.php' target='_blank'>index.php</a></p>
-            <p><strong>Credenciales de prueba:</strong></p>
-            <ul>
-                <li><strong>Paciente:</strong> maria.gonzalez@email.com / password123</li>
-                <li><strong>Cuidador:</strong> carlos.rodriguez@email.com / password123</li>
-            </ul>
-            <p><strong>Nota:</strong> Las contraseñas en la base de datos están hasheadas. Para pruebas locales, usa 'password123'</p>
-        </div>
-    </div>
-    </div>
-    
-    <div class='footer'>
-        <p>MediRecord v2.0 &copy; " . date('Y') . " - Sistema de recordatorio de medicamentos</p>
-        <p>Entorno: " . ($isRailway ? 'Railway' : 'Local') . "</p>
-    </div>
-</div>
+        // Confirmar reinicio
+        document.querySelector('a[href*=\"force=1\"]').addEventListener('click', function(e) {
+            if (!confirm('⚠️ ¿Estás seguro de reiniciar la configuración?\\n\\nSe eliminarán todas las tablas y datos existentes.')) {
+                e.preventDefault();
+            }
+        });
+    </script>
 </body>
 </html>";
-?>
