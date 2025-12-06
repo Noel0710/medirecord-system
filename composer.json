@@ -1,16 +1,11 @@
 {
-  "name": "medirecord/medirecord",
-  "description": "Sistema de recordatorios de medicamentos",
+  "name": "medirecord/sistema",
+  "description": "Sistema de recordatorio de medicamentos",
   "type": "project",
   "require": {
-    "php": ">=8.2",
-    "ext-curl": "*",
-    "ext-mbstring": "*",
-    "ext-json": "*",
-    "ext-pdo": "*",
-    "ext-pdo_mysql": "*"
+    "php": ">=7.4"
   },
-  "require-dev": {
-    "ext-gd": "*"
+  "autoload": {
+    "files": ["config.php"]
   }
 }
