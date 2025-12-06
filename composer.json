@@ -1,11 +1,7 @@
 {
-  "name": "medirecord/sistema",
-  "description": "Sistema de recordatorio de medicamentos",
-  "type": "project",
-  "require": {
-    "php": ">=7.4"
-  },
-  "autoload": {
-    "files": ["config.php"]
-  }
+    "name": "medirecord/sistema",
+    "type": "project",
+    "require": {
+        "php": ">=8.0"
+    }
 }
