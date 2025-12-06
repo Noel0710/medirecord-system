@@ -1,6 +1,7 @@
 <?php
-// setup_database.php - Versión corregida para Railway
-// Este archivo está en /app/public/setup_database.php
+// setup_database.php - Versión COMPLETA y AUTÓNOMA para Railway
+// NO TIENE require_once - NO depende de otros archivos
+// Copyright: MediRecord System
 
 echo "<!DOCTYPE html>
 <html lang='es'>
@@ -78,7 +79,7 @@ echo "<!DOCTYPE html>
                     <div class='card-body'>";
 
 // =============================================================================
-// FUNCIÓN PARA REGISTRAR LOG
+// FUNCIÓN PARA REGISTRAR LOG (NO DEPENDE DE NADA)
 // =============================================================================
 function logMessage($message, $type = 'info') {
     $badge = '';
@@ -574,7 +575,7 @@ echo "<div class='card mt-4'>
                         <div class='card-body'>
                             <h5>Entorno</h5>
                             <h4>" . ($isRailway ? 'Railway 🚄' : 'Local 🖥️') . "</h4>
-                            <small>" . getenv('RAILWAY_PUBLIC_DOMAIN') ?: 'localhost' . "</small>
+                            <small>" . (getenv('RAILWAY_PUBLIC_DOMAIN') ?: 'localhost') . "</small>
                         </div>
                     </div>
                 </div>
