@@ -2,11 +2,11 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "composer install --no-dev && echo 'MediRecord build completado'"
+    "buildCommand": "echo 'Building MediRecord...'"
   },
   "deploy": {
     "startCommand": "php -S 0.0.0.0:$PORT -t public",
-    "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 10
+    "healthcheckPath": "/",
+    "healthcheckTimeout": 30
   }
 }
