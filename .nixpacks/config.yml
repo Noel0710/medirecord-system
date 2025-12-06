@@ -1,0 +1,20 @@
+providers:
+  php:
+    version: "8.2"
+
+build:
+  nixPkgs:
+    - php
+    - php82Packages.composer
+
+phases:
+  setup:
+    - mkdir -p /tmp/php_sessions
+    - chmod 777 /tmp/php_sessions
+  install:
+    - composer install --no-dev --no-interaction
+  build:
+    - echo "PHP 8.2 configurado"
+
+start:
+  cmd: php -S 0.0.0.0:$PORT -t public
