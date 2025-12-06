@@ -1,6 +1,6 @@
 <?php
 // setup_database.php - Versión simplificada para Railway
-// Este archivo debe estar en /app/public/
+
 
 echo "<!DOCTYPE html>
 <html lang='es'>
