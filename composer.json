@@ -4,6 +4,12 @@
   "type": "project",
   "require": {
     "php": ">=8.0",
-    "ext-pdo": "*"
+    "ext-pdo": "*",
+    "ext-mysqli": "*"
+  },
+  "scripts": {
+    "post-install-cmd": [
+      "echo 'Instalación completada'"
+    ]
   }
 }
