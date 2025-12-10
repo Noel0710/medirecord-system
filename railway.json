@@ -5,7 +5,7 @@
     "buildCommand": "composer install --no-dev"
   },
   "deploy": {
-    "startCommand": "php -S 0.0.0.0:\$PORT -t .",
+    "startCommand": "php -S 0.0.0.0:$PORT -t .",
     "healthcheckPath": "/",
     "healthcheckTimeout": 300
   }
