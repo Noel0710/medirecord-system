@@ -1,43 +1,33 @@
 <?php
 // config.php - Sistema MediRecord - Configuración Completa CORREGIDA
 // Verificar si la sesión ya está iniciada antes de llamar session_start()
+// config.php para Railway
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Configuración de la base de datos
-$host = 'localhost';
-$dbname = 'medirecord_db';
-$username = 'root';
-$password = '';
+// Configuración de la base de datos desde variables de entorno
+$host = getenv('MYSQLHOST') ?: getenv('DB_HOST') ?: 'localhost';
+$dbname = getenv('MYSQLDATABASE') ?: getenv('DB_NAME') ?: 'medirecord_db';
+$username = getenv('MYSQLUSER') ?: getenv('DB_USER') ?: 'root';
+$password = getenv('MYSQLPASSWORD') ?: getenv('DB_PASS') ?: '';
+$port = getenv('MYSQLPORT') ?: getenv('DB_PORT') ?: '3306';
 
-// Conexión a la base de datos
+// Conexión a la base de datos con puerto
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
+    $dsn = "mysql:host=$host;port=$port;dbname=$dbname;charset=utf8mb4";
+    $pdo = new PDO($dsn, $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    die("Error de conexión a la base de datos: " . $e->getMessage());
+    // Para Railway, podemos mostrar un error más amigable
+    if (getenv('RAILWAY_ENVIRONMENT')) {
+        die("Error de conexión a la base de datos. Verifica las variables de entorno.");
+    } else {
+        die("Error de conexión a la base de datos: " . $e->getMessage());
+    }
 }
-
-// Configuración de WhatsApp
-$whatsapp_config = [
-    'api_url' => 'https://api.whatsapp.com/send',
-    'message_prefix' => 'MediRecord:',
-    'enable_whatsapp' => true,
-    'timezone' => 'America/Mexico_City',
-    'recordatorio_minutos_antes' => 15,
-    'max_intentos' => 3
-];
-
-// Configuración del sitio
-$site_config = [
-    'name' => 'MediRecord',
-    'version' => '1.0',
-    'description' => 'Sistema de recordatorio de medicamentos para adultos mayores',
-    'admin_email' => 'admin@medirecord.com',
-    'url' => 'http://localhost/medirecord'
-];
 
 // =============================================================================
 // FUNCIONES DE AUTENTICACIÓN Y USUARIO
@@ -632,5 +622,6 @@ function limpiarDatosAntiguos($dias = 30) {
         return false;
     }
 }
+
 
 ?>
