@@ -1,4 +1,15 @@
 <?php
+// Configuración para Railway
+if (getenv('RAILWAY_ENVIRONMENT')) {
+    $port = getenv('PORT') ?: 3000;
+    
+    // Si es el archivo principal, iniciar servidor
+    if (php_sapi_name() === 'cli-server') {
+        // Ya estamos en el servidor CLI de PHP
+    }
+}
+// ... resto del código
+
 session_start();
 include 'config.php';
 
@@ -140,4 +151,5 @@ if (isset($_POST['register'])) {
         <?php endif; ?>
     </script>
 </body>
+
 </html>  
