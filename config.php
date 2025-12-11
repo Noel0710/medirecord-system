@@ -1,5 +1,5 @@
 <?php
-// config.php - MediRecord - Configuración FINAL para Railway y Local
+// config.php - MediRecord - Configuración FINAL CORREGIDA para Railway y Local
 
 // =============================================================================
 // CONFIGURACIÓN INICIAL
@@ -62,16 +62,28 @@ if (IS_RAILWAY && getenv('MYSQLHOST')) {
     error_log("✅ Config Local: host=$host, db=$dbname");
 }
 
-// Conexión a la base de datos
+// Conexión a la base de datos - VERSIÓN CORREGIDA
 try {
     $dsn = "mysql:host=$host;port=$port;dbname=$dbname;charset=utf8mb4";
     
-    $pdo = new PDO($dsn, $username, $password, [
+    // Opciones de PDO - VERSIÓN COMPATIBLE
+    $options = [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false,
-        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
-    ]);
+        PDO::ATTR_EMULATE_PREPARES => false
+    ];
+    
+    // Solo agregar MYSQL_ATTR_INIT_COMMAND si está disponible
+    if (defined('PDO::MYSQL_ATTR_INIT_COMMAND')) {
+        $options[PDO::MYSQL_ATTR_INIT_COMMAND] = "SET NAMES utf8mb4";
+    }
+    
+    $pdo = new PDO($dsn, $username, $password, $options);
+    
+    // Ejecutar SET NAMES manualmente si no se pudo en options
+    if (!defined('PDO::MYSQL_ATTR_INIT_COMMAND')) {
+        $pdo->exec("SET NAMES utf8mb4");
+    }
     
 } catch (PDOException $e) {
     // Manejo de errores amigable
@@ -106,25 +118,19 @@ try {
                     </li>
                     <li><strong>VERIFICA</strong> que tengas estas variables (Railway las crea automáticamente):
                         <ul>
-                            <li><code>MYSQLHOST</code> = containers-us-west-1.railway.app</li>
-                            <li><code>MYSQLDATABASE</code> = railway</li>
-                            <li><code>MYSQLUSER</code> = root</li>
-                            <li><code>MYSQLPASSWORD</code> = **** (tu contraseña)</li>
+                            <li><code>MYSQLHOST</code></li>
+                            <li><code>MYSQLDATABASE</code></li>
+                            <li><code>MYSQLUSER</code></li>
+                            <li><code>MYSQLPASSWORD</code></li>
                         </ul>
                     </li>
                     <li>Si no tienes las variables MYSQL_*, añade una base de datos:
                         <ul>
                             <li>En Railway Dashboard, haz clic en <strong>New</strong></li>
                             <li>Selecciona <strong>Database</strong> → <strong>MySQL</strong></li>
-                            <li>Espera a que se cree (2-3 minutos)</li>
                         </ul>
                     </li>
                 </ol>
-            </div>
-            
-            <div style='margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 5px;'>
-                <strong>💡 Nota:</strong> Railway usa <code>MYSQLHOST</code>, NO <code>DB_HOST</code>. 
-                Tu archivo config.php ya está configurado correctamente.
             </div>
         </div>
         ";
