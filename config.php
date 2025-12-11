@@ -1,54 +1,158 @@
 <?php
-// config.php - Sistema MediRecord - Configuración Completa CORREGIDA
-// Verificar si la sesión ya está iniciada antes de llamar session_start()
+// config.php - MediRecord - Configuración para Railway y Local
+
+// =============================================================================
+// CONFIGURACIÓN INICIAL
+// =============================================================================
+
+// Verificar si la sesión ya está iniciada
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Configuración de la base de datos
-$host = 'localhost';
-$dbname = 'medirecord_db';
-$username = 'root';
-$password = '';
+// Detectar entorno
+define('IS_RAILWAY', getenv('RAILWAY_ENVIRONMENT') !== false);
+define('IS_LOCAL', !IS_RAILWAY);
 
-// Conexión a la base de datos
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    die("Error de conexión a la base de datos: " . $e->getMessage());
+// Configuración de errores
+if (IS_LOCAL) {
+    // Desarrollo: mostrar errores
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+} else {
+    // Producción: ocultar errores
+    ini_set('display_errors', 0);
+    ini_set('display_startup_errors', 0);
+    error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
 }
 
-// Configuración de WhatsApp
+// Headers de seguridad
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('X-XSS-Protection: 1; mode=block');
+
+// Zona horaria
+date_default_timezone_set('America/Mexico_City');
+
+// =============================================================================
+// CONFIGURACIÓN DE BASE DE DATOS
+// =============================================================================
+
+// Credenciales para Railway (MySQL)
+if (IS_RAILWAY) {
+    // Railway proporciona estas variables automáticamente
+    $host = getenv('MYSQLHOST') ?: 'mysql.railway.internal';
+    $port = getenv('MYSQLPORT') ?: '3306';
+    $dbname = getenv('MYSQLDATABASE') ?: 'railway';
+    $username = getenv('MYSQLUSER') ?: 'root';
+    $password = getenv('MYSQLPASSWORD') ?: '';
+} else {
+    // Configuración local de desarrollo
+    $host = 'localhost';
+    $port = '3306';
+    $dbname = 'medirecord_db';
+    $username = 'root';
+    $password = '';
+}
+
+// Intentar conexión con PDO
+try {
+    $dsn = "mysql:host=$host;port=$port;dbname=$dbname;charset=utf8mb4";
+    
+    $pdo = new PDO($dsn, $username, $password, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
+    ]);
+    
+    // Verificar conexión exitosa
+    if (IS_LOCAL) {
+        error_log("✅ Conexión local exitosa a: $dbname");
+    } else {
+        error_log("✅ Conexión Railway exitosa");
+    }
+    
+} catch (PDOException $e) {
+    // Manejo de errores amigable
+    if (IS_RAILWAY) {
+        $error_message = "
+        <div style='font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 50px auto; border: 1px solid #e0e0e0; border-radius: 8px;'>
+            <h2 style='color: #d32f2f;'>🚨 Error de conexión a la base de datos</h2>
+            <p>No se pudo conectar a la base de datos en Railway.</p>
+            
+            <h3>📋 Variables de entorno detectadas:</h3>
+            <ul>
+                <li>MYSQLHOST: " . (getenv('MYSQLHOST') ? '✅ ' . getenv('MYSQLHOST') : '❌ No configurado') . "</li>
+                <li>MYSQLPORT: " . (getenv('MYSQLPORT') ? '✅ ' . getenv('MYSQLPORT') : '❌ No configurado') . "</li>
+                <li>MYSQLDATABASE: " . (getenv('MYSQLDATABASE') ? '✅ ' . getenv('MYSQLDATABASE') : '❌ No configurado') . "</li>
+                <li>MYSQLUSER: " . (getenv('MYSQLUSER') ? '✅ ' . getenv('MYSQLUSER') : '❌ No configurado') . "</li>
+                <li>MYSQLPASSWORD: " . (getenv('MYSQLPASSWORD') ? '✅ ****' . substr(getenv('MYSQLPASSWORD'), -4) : '❌ No configurado') . "</li>
+            </ul>
+            
+            <h3>🔧 Solución:</h3>
+            <ol>
+                <li>Ve a <strong>Railway Dashboard</strong> → tu proyecto → <strong>Variables</strong></li>
+                <li>Verifica que las variables MYSQL_* estén configuradas</li>
+                <li>Si faltan, agrega una base de datos MySQL desde <strong>New → Database → MySQL</strong></li>
+                <li>Railway creará automáticamente las variables</li>
+            </ol>
+            
+            <p style='background: #f5f5f5; padding: 15px; border-radius: 5px;'>
+                <strong>Error técnico:</strong><br>
+                <code>" . htmlspecialchars($e->getMessage()) . "</code>
+            </p>
+        </div>
+        ";
+        die($error_message);
+    } else {
+        die("
+        <div style='font-family: Arial; padding: 20px;'>
+            <h2>Error de conexión local</h2>
+            <p>No se pudo conectar a MySQL local.</p>
+            <p><strong>Error:</strong> " . htmlspecialchars($e->getMessage()) . "</p>
+            <p><strong>DSN intentado:</strong> $dsn</p>
+            <p>Verifica que XAMPP/WAMP esté corriendo y que la base de datos 'medirecord_db' exista.</p>
+        </div>
+        ");
+    }
+}
+
+// =============================================================================
+// CONFIGURACIÓN DE WHATSAPP
+// =============================================================================
 $whatsapp_config = [
-    'api_url' => 'https://api.whatsapp.com/send',
+    'api_url' => 'https://graph.facebook.com/v20.0/',
     'message_prefix' => 'MediRecord:',
     'enable_whatsapp' => true,
     'timezone' => 'America/Mexico_City',
     'recordatorio_minutos_antes' => 15,
-    'max_intentos' => 3
+    'max_intentos' => 3,
+    'token' => getenv('WHATSAPP_TOKEN') ?: '',
+    'phone_id' => getenv('WHATSAPP_PHONE_ID') ?: ''
 ];
 
-// Configuración del sitio
+// =============================================================================
+// CONFIGURACIÓN DEL SITIO
+// =============================================================================
 $site_config = [
     'name' => 'MediRecord',
-    'version' => '1.0',
+    'version' => '2.0',
     'description' => 'Sistema de recordatorio de medicamentos para adultos mayores',
     'admin_email' => 'admin@medirecord.com',
-    'url' => 'http://localhost/medirecord'
+    'url' => IS_RAILWAY ? ('https://' . getenv('RAILWAY_STATIC_URL')) : 'http://localhost',
+    'environment' => IS_RAILWAY ? 'production' : 'development'
 ];
 
 // =============================================================================
 // FUNCIONES DE AUTENTICACIÓN Y USUARIO
 // =============================================================================
 
-// Función para verificar si el usuario está logueado
 function isLoggedIn() {
     return isset($_SESSION['user_id']);
 }
 
-// Redirigir a login si no está autenticado
 function requireAuth() {
     if (!isLoggedIn()) {
         header('Location: index.php');
@@ -56,7 +160,6 @@ function requireAuth() {
     }
 }
 
-// Función para obtener información del usuario actual
 function getCurrentUser() {
     global $pdo;
     if (isLoggedIn()) {
@@ -67,7 +170,6 @@ function getCurrentUser() {
     return null;
 }
 
-// Función para verificar permisos (si es paciente o cuidador)
 function isPaciente() {
     return isset($_SESSION['user_type']) && $_SESSION['user_type'] === 'paciente';
 }
@@ -80,55 +182,37 @@ function isCuidador() {
 // FUNCIONES DE SEGURIDAD Y UTILIDAD
 // =============================================================================
 
-// Función para hashear contraseñas
-function hashPassword($password) {
-    return password_hash($password, PASSWORD_DEFAULT);
-}
-
-// Función para verificar contraseña hasheada
-function verifyPassword($password, $hash) {
-    return password_verify($password, $hash);
-}
-
-// Función para redirigir con mensaje flash
 function redirectWithMessage($url, $type, $message) {
     $_SESSION['flash_message'] = $message;
-    $_SESSION['flash_type'] = $type; // 'success', 'error', 'warning'
+    $_SESSION['flash_type'] = $type;
     header("Location: $url");
     exit();
 }
 
-// Función para mostrar mensajes flash
 function displayFlashMessage() {
     if (isset($_SESSION['flash_message'])) {
         $message = $_SESSION['flash_message'];
         $type = $_SESSION['flash_type'] ?? 'info';
         
-        $alert_class = '';
+        $alert_class = 'alert-' . $type;
+        $icon = '';
+        
         switch ($type) {
-            case 'success': $alert_class = 'alert-success'; break;
-            case 'error': $alert_class = 'alert-danger'; break;
-            case 'warning': $alert_class = 'alert-warning'; break;
-            default: $alert_class = 'alert-info';
+            case 'success': $icon = '✅'; break;
+            case 'error': $icon = '❌'; break;
+            case 'warning': $icon = '⚠️'; break;
+            default: $icon = 'ℹ️';
         }
         
-        echo "<div class='alert $alert_class alert-dismissible fade show' role='alert'>
-                $message
-                <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
+        echo "<div class='alert $alert_class' style='padding: 15px; margin: 20px 0; border-radius: 5px;'>
+                $icon $message
               </div>";
         
-        // Limpiar el mensaje después de mostrarlo
         unset($_SESSION['flash_message']);
         unset($_SESSION['flash_type']);
     }
 }
 
-// Función para validar email
-function isValidEmail($email) {
-    return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
-}
-
-// Función para sanitizar entrada de usuario
 function sanitizeInput($data) {
     return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
 }
@@ -137,17 +221,14 @@ function sanitizeInput($data) {
 // FUNCIONES DE MEDICAMENTOS Y HORARIOS
 // =============================================================================
 
-// FUNCIÓN UNIFICADA: Obtener medicamentos según el tipo de usuario
 function getUserMedications($user_id, $user_type = null) {
     global $pdo;
     
-    // Si no se especifica el tipo de usuario, usar el de la sesión
     if ($user_type === null) {
         $user_type = isset($_SESSION['user_type']) ? $_SESSION['user_type'] : 'paciente';
     }
     
     if ($user_type === 'paciente') {
-        // Paciente ve solo sus medicamentos
         $stmt = $pdo->prepare("
             SELECT m.*, h.hora, h.frecuencia, h.activo, h.id_horario,
                    u.nombre as agregado_por_nombre 
@@ -159,7 +240,6 @@ function getUserMedications($user_id, $user_type = null) {
         ");
         $stmt->execute([$user_id]);
     } else {
-        // Cuidador ve medicamentos de todos sus pacientes
         $stmt = $pdo->prepare("
             SELECT m.*, h.hora, h.frecuencia, h.activo, h.id_horario,
                    p.nombre as paciente_nombre, 
@@ -178,11 +258,9 @@ function getUserMedications($user_id, $user_type = null) {
     return $stmt->fetchAll();
 }
 
-// Función para obtener la próxima medicación del usuario
 function getNextMedication($user_id, $user_type = null) {
     global $pdo;
     
-    // Si no se especifica el tipo de usuario, usar el de la sesión
     if ($user_type === null) {
         $user_type = isset($_SESSION['user_type']) ? $_SESSION['user_type'] : 'paciente';
     }
@@ -200,7 +278,6 @@ function getNextMedication($user_id, $user_type = null) {
         ");
         $stmt->execute([$user_id, $current_time]);
     } else {
-        // Para cuidadores, obtener la próxima medicación de cualquiera de sus pacientes
         $stmt = $pdo->prepare("
             SELECT m.nombre_medicamento, m.dosis, h.hora, h.id_horario, p.nombre as paciente_nombre
             FROM medicamentos m 
@@ -217,7 +294,6 @@ function getNextMedication($user_id, $user_type = null) {
     return $stmt->fetch();
 }
 
-// Función para registrar una toma en el historial - CORREGIDA
 function recordMedicationTaken($horario_id, $estado = 'tomado') {
     global $pdo;
     
@@ -231,11 +307,9 @@ function recordMedicationTaken($horario_id, $estado = 'tomado') {
     }
 }
 
-// Función para obtener estadísticas del usuario - CORREGIDA
 function getUserStats($user_id, $user_type = null) {
     global $pdo;
     
-    // Si no se especifica el tipo de usuario, usar el de la sesión
     if ($user_type === null) {
         $user_type = isset($_SESSION['user_type']) ? $_SESSION['user_type'] : 'paciente';
     }
@@ -248,13 +322,11 @@ function getUserStats($user_id, $user_type = null) {
     ];
     
     if ($user_type === 'paciente') {
-        // Total de medicamentos
         $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM medicamentos WHERE id_usuario = ?");
         $stmt->execute([$user_id]);
         $result = $stmt->fetch();
         $stats['total_medicamentos'] = $result['total'];
         
-        // Total de tomas registradas - CORREGIDO: historial_tomas
         $stmt = $pdo->prepare("
             SELECT COUNT(*) as total 
             FROM historial_tomas ht
@@ -266,7 +338,6 @@ function getUserStats($user_id, $user_type = null) {
         $result = $stmt->fetch();
         $stats['total_tomas'] = $result['total'];
         
-        // Tomas de hoy - CORREGIDO: historial_tomas
         $today = date('Y-m-d');
         $stmt = $pdo->prepare("
             SELECT COUNT(*) as total 
@@ -279,7 +350,6 @@ function getUserStats($user_id, $user_type = null) {
         $result = $stmt->fetch();
         $stats['tomas_hoy'] = $result['total'];
     } else {
-        // Estadísticas para cuidadores (de todos sus pacientes)
         $stmt = $pdo->prepare("
             SELECT COUNT(DISTINCT m.id_medicamento) as total_medicamentos
             FROM medicamentos m
@@ -290,7 +360,6 @@ function getUserStats($user_id, $user_type = null) {
         $result = $stmt->fetch();
         $stats['total_medicamentos'] = $result['total_medicamentos'];
         
-        // Total de tomas registradas - CORREGIDO: historial_tomas
         $stmt = $pdo->prepare("
             SELECT COUNT(*) as total 
             FROM historial_tomas ht
@@ -303,7 +372,6 @@ function getUserStats($user_id, $user_type = null) {
         $result = $stmt->fetch();
         $stats['total_tomas'] = $result['total'];
         
-        // Tomas de hoy - CORREGIDO: historial_tomas
         $today = date('Y-m-d');
         $stmt = $pdo->prepare("
             SELECT COUNT(*) as total 
@@ -325,7 +393,6 @@ function getUserStats($user_id, $user_type = null) {
 // FUNCIONES DE VINCULACIÓN Y PERMISOS
 // =============================================================================
 
-// Función para obtener pacientes vinculados (para cuidadores)
 function getPacientesVinculados($cuidador_id) {
     global $pdo;
     
@@ -340,7 +407,6 @@ function getPacientesVinculados($cuidador_id) {
     return $stmt->fetchAll();
 }
 
-// Función para verificar si un cuidador tiene acceso a un paciente
 function cuidadorTieneAccesoPaciente($cuidador_id, $paciente_id) {
     global $pdo;
     
@@ -353,18 +419,15 @@ function cuidadorTieneAccesoPaciente($cuidador_id, $paciente_id) {
     return $stmt->fetch() !== false;
 }
 
-// Función para verificar permisos sobre un medicamento
 function verificarPermisoMedicamento($user_id, $medicamento_id) {
     global $pdo;
     $user_type = $_SESSION['user_type'];
 
     if ($user_type === 'paciente') {
-        // Paciente solo puede editar sus propios medicamentos
         $stmt = $pdo->prepare("SELECT id_medicamento FROM medicamentos WHERE id_medicamento = ? AND id_usuario = ?");
         $stmt->execute([$medicamento_id, $user_id]);
         return $stmt->fetch() !== false;
     } else {
-        // Cuidador puede editar medicamentos de sus pacientes
         $stmt = $pdo->prepare("
             SELECT m.id_medicamento 
             FROM medicamentos m
@@ -376,7 +439,6 @@ function verificarPermisoMedicamento($user_id, $medicamento_id) {
     }
 }
 
-// Función para obtener un medicamento por ID
 function obtenerMedicamentoPorId($medicamento_id) {
     global $pdo;
     $stmt = $pdo->prepare("SELECT * FROM medicamentos WHERE id_medicamento = ?");
@@ -384,7 +446,6 @@ function obtenerMedicamentoPorId($medicamento_id) {
     return $stmt->fetch();
 }
 
-// Función para obtener horarios de un medicamento
 function obtenerHorariosMedicamento($medicamento_id) {
     global $pdo;
     $stmt = $pdo->prepare("SELECT * FROM horarios WHERE id_medicamento = ? ORDER BY hora");
@@ -396,7 +457,6 @@ function obtenerHorariosMedicamento($medicamento_id) {
 // FUNCIONES DE WHATSAPP
 // =============================================================================
 
-// Función para enviar mensajes de WhatsApp
 function enviarWhatsApp($telefono, $mensaje, $tipo = 'recordatorio', $id_horario = null, $id_usuario = null) {
     global $pdo, $whatsapp_config;
     
@@ -405,21 +465,15 @@ function enviarWhatsApp($telefono, $mensaje, $tipo = 'recordatorio', $id_horario
     }
     
     try {
-        // Limpiar y formatear teléfono
         $telefono_limpio = preg_replace('/[^0-9]/', '', $telefono);
         
-        // Si no tiene código de país, agregar +52 para México
         if (!preg_match('/^\+/', $telefono_limpio) && strlen($telefono_limpio) == 10) {
             $telefono_limpio = '52' . $telefono_limpio;
         }
         
-        // Preparar mensaje
         $mensaje_completo = $whatsapp_config['message_prefix'] . " " . $mensaje;
-        
-        // Generar token de confirmación único
         $token_confirmacion = bin2hex(random_bytes(16));
         
-        // Guardar en la tabla recordatorios_whatsapp
         $stmt = $pdo->prepare("
             INSERT INTO recordatorios_whatsapp 
             (id_horario, id_usuario, mensaje, estado, token_confirmacion) 
@@ -428,37 +482,17 @@ function enviarWhatsApp($telefono, $mensaje, $tipo = 'recordatorio', $id_horario
         $stmt->execute([$id_horario, $id_usuario, $mensaje_completo, $token_confirmacion]);
         $log_id = $pdo->lastInsertId();
         
-        // Crear URL de WhatsApp para redirección (si se usa en navegador)
-        $mensaje_codificado = urlencode($mensaje_completo);
-        $url_whatsapp = $whatsapp_config['api_url'] . "?phone=" . $telefono_limpio . "&text=" . $mensaje_codificado;
-        
-        // En entorno de producción, aquí integrarías con la API de WhatsApp Business
-        // Por ahora simulamos el envío exitoso y guardamos el log
-        
+        // Simulación de envío (en producción usarías la API real)
         error_log("WhatsApp $tipo enviado a $telefono_limpio: $mensaje_completo");
         
         return [
             'success' => true,
             'log_id' => $log_id,
-            'url_whatsapp' => $url_whatsapp,
             'token' => $token_confirmacion
         ];
         
     } catch (Exception $e) {
         error_log("Error enviando WhatsApp: " . $e->getMessage());
-        
-        // Intentar guardar el error en el log
-        try {
-            $stmt = $pdo->prepare("
-                INSERT INTO recordatorios_whatsapp 
-                (id_horario, id_usuario, mensaje, estado, token_confirmacion) 
-                VALUES (?, ?, ?, 'fallido', ?)
-            ");
-            $stmt->execute([$id_horario, $id_usuario, $mensaje_completo, 'error_' . time()]);
-        } catch (Exception $ex) {
-            error_log("Error guardando log de WhatsApp: " . $ex->getMessage());
-        }
-        
         return [
             'success' => false,
             'error' => $e->getMessage()
@@ -466,90 +500,6 @@ function enviarWhatsApp($telefono, $mensaje, $tipo = 'recordatorio', $id_horario
     }
 }
 
-// Función para enviar recordatorios automáticos (para uso en cron)
-function enviarRecordatoriosAutomaticos() {
-    global $pdo;
-    
-    $hora_actual = date('H:i');
-    $hora_recordatorio = date('H:i', strtotime('+15 minutes'));
-    
-    // Buscar medicamentos programados para los próximos 15 minutos
-    $stmt = $pdo->prepare("
-        SELECT 
-            m.nombre_medicamento,
-            m.dosis,
-            m.instrucciones,
-            h.hora,
-            h.id_horario,
-            u.nombre as paciente_nombre,
-            u.telefono as paciente_telefono,
-            u.id_usuario as paciente_id,
-            c.nombre as cuidador_nombre,
-            c.telefono as cuidador_telefono,
-            c.id_usuario as cuidador_id
-        FROM horarios h
-        JOIN medicamentos m ON h.id_medicamento = m.id_medicamento
-        JOIN usuarios u ON m.id_usuario = u.id_usuario
-        LEFT JOIN vinculaciones v ON u.id_usuario = v.id_paciente
-        LEFT JOIN usuarios c ON v.id_cuidador = c.id_usuario
-        WHERE h.hora BETWEEN ? AND ?
-        AND h.activo = 1
-        AND (v.confirmado = 1 OR v.id_cuidador IS NULL)
-        AND NOT EXISTS (
-            SELECT 1 FROM recordatorios_whatsapp rw 
-            WHERE rw.id_horario = h.id_horario 
-            AND DATE(rw.fecha_envio) = CURDATE()
-            AND rw.mensaje LIKE '%RECORDATORIO%'
-        )
-    ");
-    $stmt->execute([$hora_actual, $hora_recordatorio]);
-    $recordatorios = $stmt->fetchAll();
-    
-    $enviados = 0;
-    foreach ($recordatorios as $recordatorio) {
-        // Enviar recordatorio al paciente
-        if (!empty($recordatorio['paciente_telefono'])) {
-            $mensaje_paciente = "RECORDATORIO: En 15 minutos debes tomar " . 
-                               $recordatorio['nombre_medicamento'] . " - " . 
-                               $recordatorio['dosis'] . ". Hora: " . $recordatorio['hora'];
-            
-            if (!empty($recordatorio['instrucciones'])) {
-                $mensaje_paciente .= " - Instrucciones: " . $recordatorio['instrucciones'];
-            }
-            
-            $result = enviarWhatsApp(
-                $recordatorio['paciente_telefono'], 
-                $mensaje_paciente, 
-                'recordatorio',
-                $recordatorio['id_horario'],
-                $recordatorio['paciente_id']
-            );
-            
-            if ($result['success']) {
-                $enviados++;
-            }
-        }
-        
-        // Notificar al cuidador
-        if (!empty($recordatorio['cuidador_telefono'])) {
-            $mensaje_cuidador = "RECORDATORIO: " . $recordatorio['paciente_nombre'] . 
-                               " debe tomar en 15 minutos: " . $recordatorio['nombre_medicamento'] . 
-                               " a las " . $recordatorio['hora'];
-            
-            enviarWhatsApp(
-                $recordatorio['cuidador_telefono'], 
-                $mensaje_cuidador, 
-                'alerta_cuidador',
-                $recordatorio['id_horario'],
-                $recordatorio['cuidador_id']
-            );
-        }
-    }
-    
-    return $enviados;
-}
-
-// Función para notificar confirmación al cuidador
 function notificarConfirmacionCuidador($paciente_id, $medicamento_info) {
     global $pdo;
     
@@ -580,57 +530,49 @@ function notificarConfirmacionCuidador($paciente_id, $medicamento_info) {
 }
 
 // =============================================================================
-// CONFIGURACIONES DE SEGURIDAD Y SERVIDOR
+// FUNCIONES DE INICIALIZACIÓN
 // =============================================================================
 
-// Headers para seguridad básica
-header('X-Content-Type-Options: nosniff');
-header('X-Frame-Options: DENY');
-header('X-XSS-Protection: 1; mode=block');
-
-// Configuración de zona horaria
-date_default_timezone_set('America/Mexico_City');
-
-// Manejo de errores (en desarrollo mostrar errores, en producción ocultarlos)
-if ($_SERVER['SERVER_NAME'] === 'localhost' || $_SERVER['SERVER_ADDR'] === '127.0.0.1') {
-    ini_set('display_errors', 1);
-    ini_set('display_startup_errors', 1);
-    error_reporting(E_ALL);
-} else {
-    ini_set('display_errors', 0);
-    ini_set('display_startup_errors', 0);
-    error_reporting(0);
-}
-
-// Función para crear directorios de logs si no existen
-function inicializarDirectoriosLogs() {
+function inicializarDirectorios() {
     $directorios = ['logs', 'temp', 'uploads'];
     foreach ($directorios as $dir) {
         if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
+            @mkdir($dir, 0777, true);
         }
     }
 }
 
-// Inicializar directorios al cargar config
-inicializarDirectoriosLogs();
+// Inicializar directorios al cargar
+inicializarDirectorios();
 
-// Función para limpiar datos antiguos (puede usarse en cron de mantenimiento)
-function limpiarDatosAntiguos($dias = 30) {
-    global $pdo;
-    
-    $fecha_limite = date('Y-m-d H:i:s', strtotime("-$dias days"));
-    
+// =============================================================================
+// VERIFICACIÓN DE ESTRUCTURA DE BASE DE DATOS (solo en local)
+// =============================================================================
+
+if (IS_LOCAL && basename($_SERVER['PHP_SELF']) === 'index.php') {
     try {
-        // Limpiar logs de WhatsApp antiguos
-        $stmt = $pdo->prepare("DELETE FROM recordatorios_whatsapp WHERE fecha_envio < ?");
-        $stmt->execute([$fecha_limite]);
-        
-        return true;
+        $stmt = $pdo->query("SHOW TABLES LIKE 'usuarios'");
+        if ($stmt->rowCount() === 0) {
+            error_log("⚠️ La base de datos no tiene tablas. Ejecuta setup_database.php");
+        }
     } catch (Exception $e) {
-        error_log("Error limpiando datos antiguos: " . $e->getMessage());
-        return false;
+        // Ignorar error en producción
     }
+}
+
+// =============================================================================
+// MANEJO DE CORS PARA WEBHOOKS
+// =============================================================================
+
+if (isset($_SERVER['HTTP_ORIGIN'])) {
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization");
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
 }
 
 ?>
